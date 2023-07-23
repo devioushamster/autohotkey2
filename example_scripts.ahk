@@ -10,12 +10,12 @@
             btmålinger.Push A_LoopField
         }
 
-        Send "!3"
-        Skriv24tMålinger(btmålinger)
+        Send "!3"                        ; Move cursor to Andre us.
+        Skriv24tMålinger(btmålinger)     ; Call function to parse array and write to journal.
 
     }
     Else {
-        Exit
+        Exit        ; Exit if clipboard doesn't contain the correct contents.
     }
 
     Skriv24tMålinger(line)
@@ -31,7 +31,7 @@
         hrdag := line[67]
         hrnatt := line[71]
 
-        ; Remove mmHg and spm. Trim new line from end of all variables.
+        ; Remove units (mmHg and spm). Trim new line from end of all variables.
         for var in [&btsnitt, &btdag, &btnatt, &hrsnitt, &hrdag, &hrnatt]
             if InStr(%var%," mmHg")
                 {
@@ -48,7 +48,7 @@
         hrmaks := line[65]
         hrmin := line[66]
 
-        ; Split the string by ekstra text, get array with bt at index 1 and time at index 2. Trim new line at end.
+        ; Split the string by extra text, get array with bt at index 1 and time at index 2. Trim new line at end.
         for var in [&sysmaks, &sysmin, &diamaks, &diamin, &hrmaks, &hrmin]
             if InStr(%var%," mmHg ved ")
                 %var% := StrSplit(%var%," mmHg ved ","`r`n")
