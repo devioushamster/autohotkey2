@@ -66,3 +66,22 @@
         Send "Dag/natt senkning (sys/dia): " RTrim(line[78],"`r`n") ""
     }
 }
+
+::-bmi::        ; <---- Høyde, Vekt og BMI.
+{
+    bmigui := Gui()     ; GUI med felt til høyde og vekt.
+    bmigui.Add("Text",, "Høyde (cm):")
+    bmigui.Add("Edit", "Number vhøyde")
+    bmigui.Add("Text", "ym", "Vekt (kg):")
+    bmigui.Add("Edit", "Number vvekt")
+    bmigui.Add("Button", "default", "Ok").OnEvent("Click", CalculateBMI)
+    bmigui.Show()
+
+    CalculateBMI(*)
+    {
+        bmicalc := bmigui.Submit()
+        bmi := Format("{:.2f}" , bmicalc.vekt / (bmicalc.høyde/100)**2) ; Kalkuler BMI
+        Send "^7^r" bmicalc.vekt "{Tab}" bmicalc.høyde "{Enter}^1!3"    ; Registrer høyde og vekt i percentilskjema.
+        Send "BMI: " bmi    ; Lim BMI inn i 2 - Andre us.
+    }
+}
