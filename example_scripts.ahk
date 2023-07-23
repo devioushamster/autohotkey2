@@ -67,7 +67,7 @@
     }
 }
 
-::-bmi::        ; <---- Høyde, Vekt og BMI.
+::-bmi::        ; <---- Høyde, Vekt og BMI. Skriv høyde og vekt i GUI. Registreres i percentilskjema. BMI skrives i notatet.
 {
     bmigui := Gui()     ; GUI med felt til høyde og vekt.
     bmigui.Add("Text",, "Høyde (cm):")
