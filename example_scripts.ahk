@@ -56,11 +56,11 @@
                 %var% := StrSplit(%var%," bpm ved ","`r`n")
 
         ; Write summary
-        ; Line 82 (%) and lines 25, 30, 35 | vellykket := StrSplit(StrReplace(line[82],"% vellykket "")," ") | btsnitt := StrReplace(line[25]," mmHg")
+        ; Line 82 (%) and lines 25, 30, 35
         Send "24-timers Blodtrykk: Gjennomsnitt (" vellykket[1] " vellykket) " btsnitt " - Dag (" vellykket[2] ") " btdag " - Natt (" vellykket[3] ") " btnatt "`n"
-        ; Lines 42, 43, 52, 53 | sysmaks := StrSplit(line[42]," mmHg ved ")
+        ; Lines 42, 43, 52, 53
         Send "Systolisk Maks: " sysmaks[1] " (kl " sysmaks[2] ") - Min: " sysmin[1] " (kl " sysmin[2] ") | Diastolisk Maks: " diamaks[1] " (kl " diamaks[2] ") - Min: " diamin[1] " (kl " diamin[2] ")`n"
-        ; Lines 63, 67, 71, 65, 66 | hrsnitt := StrReplace(line[63]," spm") | hrmaks := StrSplit(line[65]," bpm ved ")
+        ; Lines 63, 67, 71, 65, 66
         Send "Hjertefrekvens: Gjennomsnitt " hrsnitt " - Dag " hrdag " - Natt " hrnatt " | Maks " hrmaks[1] " (kl " hrmaks[2] ") - Min " hrmin[1] " (kl " hrmin[2] ")`n"
         ; Line 78 | 10,4% / 10,8% (Ikke en dipper)
         Send "Dag/natt senkning (sys/dia): " RTrim(line[78],"`r`n") ""
