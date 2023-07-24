@@ -1,4 +1,4 @@
-#Requires AutoHotkey v2.0
+#Requires AutoHotkey >=2.0- <2.1
 #SingleInstance force  ; Ensures that only the last executed instance of script is running
 
 ::-24bt::       ; <---- Oppsummerer statistikk dokumentet fra 24t BT.
