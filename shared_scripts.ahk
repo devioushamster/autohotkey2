@@ -90,44 +90,6 @@
     }
 }
 
-::-ute::        ; <---- Uteblitt [WIP]
-{
-    Send "^+{F7}Kontaktårsak uspesifisert{Down}{Enter}"     ; Diagnosekode.
-    WinWaitActive "Journal"
-    Send "!5Ikke møtt til avtalt legetime. Faktureres for konsultasjonshonorar."
-    Takste("ute")
-    HelseResponsSMS("uteblitt",journalfør:=true)
-    LukkJournal()
-}
-
-::-bmi::
-{
-    bmigui := Gui()     ; GUI med felt til høyde og vekt.
-    bmigui.Add("Text",, "Høyde (cm):")
-    bmigui.Add("Edit", "vhøyde")
-    bmigui.Add("Text", "ym", "Vekt (kg):")
-    bmigui.Add("Edit", "vvekt")
-    bmigui.Add("Button", "default", "Ok").OnEvent("Click", CalculateBMI)
-    bmigui.Show()
-
-    CalculateBMI(*)
-    {
-        bmicalc := bmigui.Submit()
-
-        ; Convert to float, replace commmas with periods.
-	    vekt := Round( Float(StrReplace(bmicalc.vekt , "," , ".")) , 2)
-	    høyde := Round( Float(StrReplace(bmicalc.høyde , "," , ".")) , 2)
-        ; Version with commas.
-	    vekt_comma := StrReplace(vekt , "." , ",")
-	    høyde_comma := StrReplace(høyde , "." , ",")
-
-        bmi := Format("{:.2f}" , vekt / (høyde/100)**2) ; Kalkuler BMI
-        Send "^7^r" vekt_comma "{Tab}" høyde_comma "{Enter}^1!3"    ; Registrer høyde og vekt i percentilskjema.
-        Send "BMI: " bmi    ; Lim BMI inn i 2 - Andre us.
-        
-    }
-}
-
 ::-24bt::       ; <---- Oppsummerer statistikk dokumentet fra 24t BT. Fortsetter at man har åpnet PDF fra CardioPerfect 24t BT, Ctrl-A og Ctrl-C for å kopiere alt.
 {
     If SubStr(A_Clipboard,1,5) == "Navn:" {     ; Check if clipboard contains the correct contents.
