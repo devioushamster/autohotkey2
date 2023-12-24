@@ -283,3 +283,16 @@ Ekspeder()
     }
     return
 }
+
+;-------------------------------;
+;-------------------------------;
+;-----Sticky Key Prevention-----;
+;-------------------------------;
+;-------------------------------;
+; Skal forhindre at Ctrl og Alt
+; setter seg fast.
+
+*Ctrl::SendEvent('{1 down}')
+*Ctrl up::SendEvent('{1 up}')
+*Alt::SendEvent('{2 down}')
+*Alt up::SendEvent('{2 up}')
