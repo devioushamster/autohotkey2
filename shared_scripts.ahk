@@ -271,7 +271,6 @@ HelseResponsSMS(melding, journalfør:=false)
 
 Ekspeder()
 {
-    Send "^p{Ctrl up 2}"
     Winwaitactive("Skriv")  
     if WinExist("Skriv ut / send sykmelding")
         Send "!o"
