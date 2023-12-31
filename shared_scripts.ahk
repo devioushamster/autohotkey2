@@ -22,13 +22,6 @@
     LukkJournal()
 }
 
-::-rådlv::      ; <---- Råd legevakt, 1bk.  Forutsetter diagnosekode satt. Laget for gammel Økonomi modul.
-{
-    Send "!5Råd ok"
-    Takste(takst:="1bk", lv:=true)
-    LukkJournal(epikrise:=false, lv:=true)
-}
-
 ::-bt::		    ; <---- Skriver BT/P mal under "Andre undersøkelser" og flytter markøren til *. [BT: * venstre (cuff str 11), Puls: ]
 {
     Send "!3"
