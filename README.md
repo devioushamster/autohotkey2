@@ -5,7 +5,7 @@
 - **Ctrl-Shift-P** for hurtig sending av sykemelding/resept. Hopper over alt før du skriver inn PIN koden.
 - **-rps** Takster 1i, sender SMS via HelseRespons (må velge telefonnummer hvis det er flere) og lukker journal. Forutsetter at man har lagt inn diagnosekode først.
 - **-råd** Takster 1bd, skriver "Råd ok" og lukker journal. Forutsetter at man har lagt inn diagnosekode først.
-- **-rådlv** Takster 1bk, skriver "Råd ok" og lukker journal (trykker vekk send epikrise sånn at det ikke sendes, dette vil da sende epikrise hvis man har satt det opp slik at den boksen ikke er huket av ved default). Forutsetter at man har lagt inn diagnosekode først. **Virker kun med gammel Økonomi modul.**
+- ~~**-rådlv** Takster 1bk, skriver "Råd ok" og lukker journal (trykker vekk send epikrise sånn at det ikke sendes, dette vil da sende epikrise hvis man har satt det opp slik at den boksen ikke er huket av ved default). Forutsetter at man har lagt inn diagnosekode først. **Virker kun med gammel Økonomi modul.**~~ **Bugs, removed for now.**
 - **-bt** Skriver BT/P mal under "Andre undersøkelser" og flytter markøren til *. [BT: * venstre (cuff str 11), Puls: ]
 - **-bta** Kommer opp en boks, man skriver inn 3xBT/P, kan velge hvilken arm og cuff størrelse. Den skriver inn resultat under "Andre undersøkelser". Hvis den ikke skulle skrive resultat er det også lagret i clipboard, bare Ctrl-V.
     > BT: 120/80->120/80->120/80 Venstre arm (cuff str 11), Puls: 60->60->60 regelmessig\
