@@ -3,19 +3,64 @@
 
 #HotIf WinActive("Journal")   ; ---------- Alt under dette trigges bare fra journalvinduet. ----------
 
-^+p::        ; <---- Hurtig send resept/sykemelding. --Ctrl+Shift+P--
+^+p::        ; <---- Hurtig send resept/sykemelding.
 {
+    Send "^p"
     Ekspeder()
+    StickyKeyPrevention(ctrl:=true)
 }
 
-::-rps::        ; <---- Forutsetter skrevet resept og diagnosekode satt. Takster 1i og sender SMS via HelseRespons.
+::-1i::     ; --------- Her kan du lage egen hurtig takst hotstring. Bare erstatt -1i med det du vil utløse hurtigtasten med og 1i mellom "" med taksten.
 {
     Takste("1i")
-    HelseResponsSMS("resept")
     LukkJournal()
 }
 
-::-råd::        ; <---- Råd dagtid, 1bd. Forutsetter diagnosekode satt. Laget for ny Faktura modul.
+::-t::        ; <---- Send takst og lukk journal.
+{
+    tgui := Gui()
+    tgui.Add("Text",, "Takst")
+    tgui.Add("Edit", "vtakst")
+    tgui.Add("Button", "default x+20", "Ok").OnEvent("Click", RunTakst)
+    tgui.Show()
+
+    RunTakst(*)
+    {
+    takst := tgui.Submit()
+    Takste(takst.takst)
+    LukkJournal()
+    }
+}
+
+::-rp::	; <---- Forutsetter skrevet resept og diagnosekode satt. Takster 1i og sender e-kontakt. Setter ; foran EkontaktMedling og fjern foran HelseResponsSMS for å heller sende SMS via Helserespons.
+{
+    Takste("1i")
+    EkontaktMelding(melding:="resept")
+    ;HelseResponsSMS(melding:="resept", journalfør:=false)
+    LukkJournal()
+}
+
+::-ute::        ; <---- Uteblitt fra konsultasjon. Takster (forutsetter at "ute" er registrert som takst). Journalfører at pas ikke har møtt og at faktura sendes. Sender ekontakt.
+{
+    Send "^+{F7}Kontaktårsak uspesifisert{Down}{Enter}"     ; Diagnosekode.
+    WinWaitActive "Journal"
+    Send "!5Ikke møtt til avtalt legetime. Faktureres for konsultasjonshonorar."
+    Takste("ute")
+    EkontaktMelding(melding:="uteblitt")
+    LukkJournal()
+}
+
+^LButton::      ; <---- Forutsetter skrevet resept og diagnosekode satt. Ctrl-Click Reseptreseptfornyelse. Takster 1i og svarer reseptreseptfornyelse Helsenorge.
+{
+    Send "{Click}"      ; Click lenke til reseptfornyelse
+    Sleep 1000
+    Send "^+{e}"        ; Send elektronisk melding
+    Send "{Ctrl Up 2}"
+    LukkJournal(regning:=true)   ; Lukk journal og send regning
+    StickyKeyPrevention(ctrl:=true)
+}
+
+::-råd::        ; <---- Råd dagtid, 1bd. Forutsetter diagnosekode satt.
 {
     Send "!5Råd ok"
     Takste("1bd")
@@ -83,6 +128,109 @@
     }
 }
 
+::-obt::		    ; <---- Ortostatisk blodtrykk
+{
+    obtgui := Gui()
+    obtgui.Add("Text",, "Pasienten ligger i minimum 5 minutter og flytter seg deretter fra liggende til stående stilling.")
+    
+    obtgui.Add("Text", "Section", "BT liggende:")
+    obtgui.Add("Edit", "vobt1")
+    obtgui.Add("Text",, "Puls liggende:")
+    obtgui.Add("Edit", "Number vop1")
+
+    obtgui.Add("Text", "ys", "BT 1 min stående:")
+    obtgui.Add("Edit", "vobt2")
+    obtgui.Add("Text",, "Puls 1 min stående:")
+    obtgui.Add("Edit", "Number vop2")
+
+    obtgui.Add("Text", "ys", "BT 3 min stående:")
+    obtgui.Add("Edit", "vobt3")
+    obtgui.Add("Text",, "Puls 3 min stående:")
+    obtgui.Add("Edit", "Number vop3")
+
+    obtgui.Add("Radio", "Checked vvenstre xm", "Venstre arm")
+    obtgui.Add("Radio", "vhøyre x+20", "Høyre arm")
+
+    obtgui.Add("Text", "x+20", "Cuff str: ")
+    obtgui.Add("Radio", "Checked velleve x+20", "11")
+    obtgui.Add("Radio", "vtolv x+20", "12")
+
+    obtgui.Add("Button", "default x+20", "Ok").OnEvent("Click", WriteOBT)
+    obtgui.Show()
+
+    WriteOBT(*)
+    {
+    obt := obtgui.Submit()
+    mål1 := StrSplit(obt.obt1,"/")
+    mål2 := StrSplit(obt.obt2,"/")
+    mål3 := StrSplit(obt.obt3,"/")
+
+    if mål3[1]
+    {
+        systoliskfall := ( mål1[1] - Min(mål2[1],mål3[1]) )  ; systolisk liggende minus laveste systolisk stående
+        diastoliskfall:= ( mål1[2] - Min(mål2[2],mål3[2]) )  ; diastolisk liggende minus laveste diastolisk stående
+    }
+    else
+    {
+        systoliskfall := ( mål1[1] - mål2[1] )  ; systolisk liggende minus laveste systolisk stående
+        diastoliskfall:= ( mål1[2] - mål2[2] )  ; diastolisk liggende minus laveste diastolisk stående
+    }
+    if obt.op3
+        pulsendring:= ( Max(obt.op2,obt.op3) - obt.op1 )  ; høyeste stående puls minus liggende puls
+    else 
+        pulsendring:= ( obt.op2 - obt.op1 )  ; høyeste stående puls minus liggende puls
+
+    if obt.venstre
+        arm := "Venstre"
+    else
+        arm := "Høyre"
+    
+    if obt.elleve
+        cuffstr := 11
+    if obt.tolv
+        cuffstr := 12
+    else
+        cuffstr := 11
+
+    WinActivate "Journal"
+    WinWaitActive "Journal"
+    Send "!3"
+    if mål3[1]
+        A_Clipboard := "Liggende BT: " obt.obt1 ", Puls: " obt.op1 "`rStående 1m BT: " obt.obt2 ", Puls: " obt.op2 "`rStående 3m BT: " obt.obt3 ", Puls: " obt.op3 "`r`rSystolisk BT fall: " systoliskfall " mmHg. Diastolisk BT fall: " diastoliskfall " mmHg. Pulsøkning: " pulsendring " bpm.`r" arm " arm (cuff str " cuffstr ")"
+    else
+        A_Clipboard := "Liggende BT: " obt.obt1 ", Puls: " obt.op1 "`rStående 1m BT: " obt.obt2 ", Puls: " obt.op2 "`r`rSystolisk BT fall: " systoliskfall " mmHg. Diastolisk BT fall: " diastoliskfall " mmHg. Pulsøkning: " pulsendring " bpm.`r" arm " arm (cuff str " cuffstr ")"
+    Send A_Clipboard
+    }
+}
+
+::-bmi::        ; <---- Skriv inn høyde og vekt. Verdiene registreres i percentilskjema og BMI skrives i journalnotat i tillegg til høyde og vekt.
+{
+    bmigui := Gui()     ; GUI med felt til høyde og vekt.
+    bmigui.Add("Text",, "Høyde (cm):")
+    bmigui.Add("Edit", "vhøyde")
+    bmigui.Add("Text", "ym", "Vekt (kg):")
+    bmigui.Add("Edit", "vvekt")
+    bmigui.Add("Button", "default", "Ok").OnEvent("Click", CalculateBMI)
+    bmigui.Show()
+
+    CalculateBMI(*)
+    {
+        bmicalc := bmigui.Submit()
+
+        ; Convert to float, replace commmas with periods.
+	    vekt := Round( Float(StrReplace(bmicalc.vekt , "," , ".")) , 2)
+	    høyde := Round( Float(StrReplace(bmicalc.høyde , "," , ".")) , 2)
+        ; Version with commas.
+	    vekt_comma := StrReplace(vekt , "." , ",")
+	    høyde_comma := StrReplace(høyde , "." , ",")
+
+        bmi := Format("{:.2f}" , vekt / (høyde/100)**2) ; Kalkuler BMI
+        Send "^7^r" vekt_comma "{Tab}" høyde_comma "{Enter}^1!3"    ; Registrer høyde og vekt i percentilskjema.
+        Send "BMI: " bmi    ; Lim BMI inn i 2 - Andre us.
+        
+    }
+}
+
 ::-24bt::       ; <---- Oppsummerer statistikk dokumentet fra 24t BT. Fortsetter at man har åpnet PDF fra CardioPerfect 24t BT, Ctrl-A og Ctrl-C for å kopiere alt.
 {
     If SubStr(A_Clipboard,1,5) == "Navn:" {     ; Check if clipboard contains the correct contents.
@@ -147,42 +295,125 @@
     }
 }
 
-::-ute::        ; <---- Uteblitt fra konsultasjon. Takster (forutsetter at "ute" er registrert som takst). Journalfører at pas ikke har møtt og at faktura sendes. Sender SMS via HelseRespons og journalfører SMS.
+::-dcal::	; ----		Merk en dato (format: 01.01.2000) og skriv inn hvor mange tabletter er utlevert siden den datoen. Kalkulerer snittforbruk.
 {
-    Send "^+{F7}Kontaktårsak uspesifisert{Down}{Enter}"     ; Diagnosekode.
-    WinWaitActive "Journal"
-    Send "!5Ikke møtt til avtalt legetime. Faktureres for konsultasjonshonorar."
-    Takste("ute")
-    HelseResponsSMS("uteblitt",journalfør:=true)
-    LukkJournal()
+    AskForDate()
+    
+    DateCalculator(date)    ; Main part of script
+    {
+        Sleep 100
+        datosplit := StrSplit( Trim(date) ,".")
+        
+        if StrLen(datosplit[1]) < 2             ; If month and date are only 1 digit, add zeroes.
+            datosplit[1] := "0" . datosplit[1]
+        if StrLen(datosplit[2]) < 2
+            datosplit[2] := "0" . datosplit[2]
+        
+        fradato := datosplit[3] . datosplit[2] . datosplit[1]
+
+        dager := DateDiff(A_Now, fradato, "days")
+
+        datogui := Gui()
+        datogui.Add("Text",, "Antall tabletter:")
+        datogui.Add("Edit", "vantall")
+
+        datogui.Add("Button", "default x+20", "&Ok").OnEvent("Click", CalculateDate)
+        datogui.Show()
+
+        CalculateDate(*)
+        {
+        tabletter := datogui.Submit()
+        antalltbl := tabletter.antall
+        forbruk := Round(antalltbl / dager, 1)
+
+        Send "^1!5"
+        Send "Utlevert " antalltbl " stk siden " date ". Tilsvarer snitt forbruk på " forbruk " daglig."
+        }
+    }
+
+    DateCorrect(date)   ; Check if date is in correct format.
+    {
+        regex := "\d{1,2}\.\d{1,2}\.\d{4}"
+        if RegExMatch(date, regex)
+            return true
+        else
+            return false
+    }
+
+    AskForDate()    ; Ask for manual entry of date
+    {
+        askgui := Gui()
+        askgui.Add("Text",, "Skriv fra dato (XX.XX.XXXX): ")
+        askgui.Add("Edit", "vdate")
+        askgui.Add("Button", "default x+20", "Ok").OnEvent("Click", GetDate)
+        askgui.Show()
+
+        GetDate(*)
+        {
+            ask := askgui.Submit()
+            if DateCorrect(ask.date)
+                DateCalculator(ask.date)    ; If entered correctly, run script.
+            else
+            {
+                MsgBox "Feil format. Må skrives XX.XX.XXXX"
+                AskForDate()
+            }
+        }
+    }
+
 }
 
-::-bmi::        ; <---- Skriv inn høyde og vekt. Verdiene registreres i percentilskjema og BMI skrives i journalnotat i tillegg til høyde og vekt.
+::-beers::	; ----		Søk Beers list etter medikament.
 {
-    bmigui := Gui()     ; GUI med felt til høyde og vekt.
-    bmigui.Add("Text",, "Høyde (cm):")
-    bmigui.Add("Edit", "vhøyde")
-    bmigui.Add("Text", "ym", "Vekt (kg):")
-    bmigui.Add("Edit", "vvekt")
-    bmigui.Add("Button", "default", "Ok").OnEvent("Click", CalculateBMI)
-    bmigui.Show()
+    beergui := Gui()
+    beergui.Add("Text",, "Medikament: ")
+    beergui.Add("Edit", "vmed")
+    beergui.Add("Button", "default x+20", "Ok").OnEvent("Click", SearchBeers)
+    beergui.Show()
 
-    CalculateBMI(*)
+    SearchBeers(*)
     {
-        bmicalc := bmigui.Submit()
-
-        ; Convert to float, replace commmas with periods.
-	    vekt := Round( Float(StrReplace(bmicalc.vekt , "," , ".")) , 2)
-	    høyde := Round( Float(StrReplace(bmicalc.høyde , "," , ".")) , 2)
-        ; Version with commas.
-	    vekt_comma := StrReplace(vekt , "." , ",")
-	    høyde_comma := StrReplace(høyde , "." , ",")
-
-        bmi := Format("{:.2f}" , vekt / (høyde/100)**2) ; Kalkuler BMI
-        Send "^7^r" vekt_comma "{Tab}" høyde_comma "{Enter}^1!3"    ; Registrer høyde og vekt i percentilskjema.
-        Send "BMI: " bmi    ; Lim BMI inn i 2 - Andre us.
-        
+        beers := beergui.Submit()
+        Webside("https://www.guidelinecentral.com/guideline/340784/","2023 Beers Criteria for Medication Use List - AGS Beer Criteria Guideline 2023")
+        Sleep 500
+        Send "^f" ; Find on page
+        Send beers.med "{Enter}"
     }
+}
+
+^!a::	; ----		Søk på merket labprøve i labbildet på analyseoversikten.no
+{
+    Send "^c^c"
+    regex := "([A-Z]*-)([A-Za-z]*)"
+    RegexMatch(A_Clipboard , regex, &analyse)
+    
+    Run "https://www.analyseoversikten.no"
+    Sleep 500
+    Send "{Tab 9}"
+    Send analyse[2]
+    StickyKeyPrevention(ctrl:=true,alt=true)
+}
+
+; Resepter
+::-apo6x5::     ; ----      Apocillin 660 mg x 4 i 5 dager
+{
+    SkrivResept("apocillin6x5")
+}
+::-apo1x5::     ; ----      Apocillin 1 g x 4 i 5 dager
+{
+    SkrivResept("apocillin1x5")
+}
+::-apo1x7::     ; ----      Apocillin 1 g x 4 i 7 dager
+{
+    SkrivResept("apocillin1x7")
+}
+::-apo1x10::     ; ----      Apocillin 1 g x 4 i 10 dager
+{
+    SkrivResept("apocillin1x10")
+}
+::-sel3x3::     ; ----      Selexid 200 mg x 3 i 3 dager
+{
+    SkrivResept("selexid3x3")
 }
 
 #HotIf ; ---------------- Alt over dette trigges bare fra journalvinduet. ----------------
@@ -238,6 +469,107 @@ LukkJournal(regning:=false, lv:=false, epikrise:=false, test:=false)
         }
 }
 
+EkontaktMelding(melding,greeting:=true)
+{
+    meldinger := Map(
+        "resept", ["E-resept sendt", "E-resept er sendt og kan hentes på valgfritt apotek.`r`rMvh`rPeter Lorens"],
+        "uteblitt", ["Ikke møtt til time", "Da du ikke møtte til time i dag eller har avbestilt under 24 timer før timen vil du motta faktura fra Convene i tråd med 'Forskrift om stønad til dekning av utgifter til undersøkelse og behandling hos lege, Merknad B2'. Vi håper du tar kontakt igjen om du trenger ny time. Vennlig hilsen Fenring Legesenter"],
+        "normlab", ["Prøvesvar", "Blodprøvene dine var normale."]
+    )
+
+    Send "{F9}E-kontakt, engangskontakt{Enter}"
+    WinWaitActive("Opprett nytt dokument")
+    if greeting
+        Send "Hei,`r`r"
+    Send "{Tab}" meldinger[melding][1] "{Enter}"
+    if greeting
+        Send "`r`rMvh`rPeter Lorens"
+    Sleep 1500
+    if WinExist("Advarsel")
+        {
+        return
+        }
+    Send meldinger[melding][2]
+    Send "^+e"
+    return
+}
+
+Ekspeder()
+{
+    Winwaitactive("Skriv")  
+    if WinExist("Skriv ut / send sykmelding")
+        Send "!o"
+
+    if WinExist("Skriv ut/send/lagre") {
+        Send "!o"
+        Winwaitactive("Forhåndsvisning av meldinger")
+        Send "{Enter}"
+    }
+    return
+}
+
+Webside(url,tittel)
+{
+    if WinExist(tittel)
+        WinActivate
+    else
+        Run url
+    WinWaitActive(tittel)
+    return
+}
+
+SkrivResept(medkode)
+{
+    ; [1]Preparatnavn, [2]posisjon på listen, [3]Fast(1)-Behov(2)-Kurs(3), [4]Bruksområde, [5]Morgen, [6]Formoddag, [7]Midt på dag, [8]Ettermiddag, [9]Kveld, [10]Natt, [11]Dager
+    medikament := Map(
+        "apocillin6x5", ["apocillin", 6, 3, 4, 1, 1, 0, 1, 1, 0, 5],
+        "apocillin1x5", ["apocillin", 1, 3, 4, 1, 1, 0, 1, 1, 0, 5],
+        "apocillin1x7", ["apocillin", 2, 3, 4, 1, 1, 0, 1, 1, 0, 7],
+        "apocillin1x10", ["apocillin", 3, 3, 4, 1, 1, 0, 1, 1, 0, 10],
+        "selexid3x3", ["selexid", 4, 3, 2, 1, 0, 1, 0, 1, 0, 3]
+    )
+    
+    Send "^3!k!ø{Tab}"  ; Sikre at man er på "Søk preparat"
+    Sleep 100
+    Send medikament[medkode][1]  ; Søk preparatnavn
+    Sleep 200
+    if medikament[medkode][2] = 1
+        Send "{Enter}"
+
+    Loop medikament[medkode][2] ; Velg preparat
+    {
+        Send "{Down}"
+    }  
+
+    Send "{Enter}"
+    Sleep 200
+    Send "!b"
+    Loop medikament[medkode][4] ; Velg Bruksområde
+    {
+        Send "{Down}"
+    }
+    Send "{Tab 2}{Enter}"
+    WinWaitActive "Strukturert dosering"
+    Send "{Tab 5}" ; Velg Morgen dose
+    Send medikament[medkode][5] "{Tab}"
+    Send medikament[medkode][6] "{Tab}"
+    Send medikament[medkode][7] "{Tab}"
+    Send medikament[medkode][8] "{Tab}"
+    Send medikament[medkode][9] "{Tab}"
+    Send medikament[medkode][10] "{Tab 2}"
+    if medikament[medkode][3] = 3
+        Send medikament[medkode][11] "{Enter}"
+    else
+        Send "{Enter}"
+    Sleep 100
+    Send "!y"
+    Loop medikament[medkode][3] ; Velg Fast, Behov, Kur
+    {
+        Send "{Down}"
+    }
+    Send "!g"
+}
+
 HelseResponsSMS(melding, journalfør:=false)
 {
     sms_meldinger := Map(
@@ -262,29 +594,19 @@ HelseResponsSMS(melding, journalfør:=false)
     WinWaitActive("Journal")
 }
 
-Ekspeder()
-{
-    Winwaitactive("Skriv")  
-    if WinExist("Skriv ut / send sykmelding")
-        Send "!o"
-
-    if WinExist("Skriv ut/send/lagre") {
-        Send "!o"
-        Winwaitactive("Forhåndsvisning av meldinger")
-        Send "{Enter}"
-    }
-    return
-}
-
 ;-------------------------------;
 ;-------------------------------;
 ;-----Sticky Key Prevention-----;
 ;-------------------------------;
 ;-------------------------------;
 ; Skal forhindre at Ctrl og Alt
-; setter seg fast.
+; setter seg fast. Men virker ikke 100%.
 
-*Ctrl::SendEvent('{1 down}')
-*Ctrl up::SendEvent('{1 up}')
-*Alt::SendEvent('{2 down}')
-*Alt up::SendEvent('{2 up}')
+StickyKeyPrevention(ctrl:=false,alt:=false)
+{
+    if ctrl
+        Send "{Ctrl down}{Ctrl up}{Ctrl down}{Ctrl up}"
+    if alt
+        Send "{Alt down}{Alt up}{Alt down}{Alt up}"
+    return
+}
