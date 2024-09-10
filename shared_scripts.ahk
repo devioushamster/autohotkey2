@@ -472,8 +472,8 @@ LukkJournal(regning:=false, lv:=false, epikrise:=false, test:=false)
 EkontaktMelding(melding,greeting:=true)
 {
     meldinger := Map(
-        "resept", ["E-resept sendt", "E-resept er sendt og kan hentes på valgfritt apotek.`r`rMvh`rPeter Lorens"],
-        "uteblitt", ["Ikke møtt til time", "Da du ikke møtte til time i dag eller har avbestilt under 24 timer før timen vil du motta faktura fra Convene i tråd med 'Forskrift om stønad til dekning av utgifter til undersøkelse og behandling hos lege, Merknad B2'. Vi håper du tar kontakt igjen om du trenger ny time. Vennlig hilsen Fenring Legesenter"],
+        "resept", ["E-resept sendt", "E-resept er sendt og kan hentes på valgfritt apotek."],
+        "uteblitt", ["Ikke møtt til time", "Da du ikke møtte til time i dag eller har avbestilt under 24 timer før timen vil du motta faktura fra Convene i tråd med 'Forskrift om stønad til dekning av utgifter til undersøkelse og behandling hos lege, Merknad B2'. Vi håper du tar kontakt igjen om du trenger ny time."],
         "normlab", ["Prøvesvar", "Blodprøvene dine var normale."]
     )
 
@@ -483,7 +483,7 @@ EkontaktMelding(melding,greeting:=true)
         Send "Hei,`r`r"
     Send "{Tab}" meldinger[melding][1] "{Enter}"
     if greeting
-        Send "`r`rMvh`rPeter Lorens"
+        Send "`r`rMvh`rFornavn Etternavn"
     Sleep 1500
     if WinExist("Advarsel")
         {
