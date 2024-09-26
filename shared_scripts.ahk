@@ -394,6 +394,14 @@
     StickyKeyPrevention(ctrl:=true,alt=true)
 }
 
+^!i::   ; ----      Bytte signatur til eget
+{
+    Send "^i"
+    ; Erstatt p med første bokstav i ditt signatur.
+    ; {Down} trykker nedpil en gang, {Down 2} trykker to ganger osv.
+    Send "p{Down}{Enter}"
+}
+
 ; Resepter
 ::-apo6x5::     ; ----      Apocillin 660 mg x 4 i 5 dager
 {

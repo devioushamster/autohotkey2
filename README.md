@@ -14,6 +14,9 @@
 - **-rp** Takster 1i, sender melding til pasient og lukker journal. Forutsetter at man har lagt inn diagnosekode først.
 - **Ctrl-Venstre Mustrykk** Til Reseptfornyelse via helsenorge. Forutsetter skrevet resept og diagnosekode. Ctrl klikk med reseptfornyelse meldingen åpen. Sender svar på meldingen (som automatisk takster 1i) og lukker journalen.
 
+## Annet
+- **Ctr-Alt-I** for å bytte direkte til eget signatur i et journalnotat. Må tilpasses eget signatur.
+
 ## Relativt stabile
 ** Virker stort sett for meg, men noen små feil kan skje. **
 - **Ctrl-Shift-P** for hurtig sending av sykemelding/resept. Hopper over alt før du skriver inn PIN koden. **Opplever at Ctrl og Alt han "sette seg fast" av og til, hvis man trykker litt på de knappene fikser det seg.**
